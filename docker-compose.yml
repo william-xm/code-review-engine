@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  # Express应用服务 (Express application service)
+  express-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: code-review-engine
+    restart: unless-stopped
+    ports:
+      - "4399:4399"
+    environment:
+      - NODE_ENV=production
+      - PORT=4399
+      - IP_ADDRESS=0.0.0.0
+    env_file:
+      - .env
+    volumes:
+      # 挂载日志目录 (Mount logs directory)
+      - ./logs:/app/logs
+    networks:
+      - express-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4399/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    # 资源限制 (Resource limits)
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+
+networks:
+  express-network:
+    driver: bridge
+
+volumes:
+  logs:
+    driver: local
